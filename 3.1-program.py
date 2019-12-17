@@ -11,8 +11,6 @@ class Point(object):
     def __init__(self, x, y, steps):
         self.pos = (x, y)
         self.steps = steps
-    def __hash__(self): return self.pos.__hash__()
-    def __eq__(self, that): return self.pos.__eq__(that.pos)
 
 def trace(wire):
     steps = 0
@@ -37,6 +35,14 @@ def trace(wire):
             points.append(Point(x, y, steps))
     return points
 
+def find_intersections(trace1, trace2):
+    steps1 = { point.pos: point.steps for point in trace1 }
+    steps2 = { point.pos: point.steps for point in trace2 }
+    points = set(steps1.keys()) & set(steps2.keys())
+    intersections = \
+            [Point(pos[0], pos[1], steps1[pos] + steps2[pos]) for pos in points]
+    return sorted(intersections, key=lambda x: x.steps)
+
 def manhattan(point):
     return abs(point.pos[0]) + abs(point.pos[1])
 
@@ -45,11 +51,10 @@ def main():
         wires = list(map(lambda line: map(Move, line.split(",")), f))
         trace0 = trace(wires[0])
         trace1 = trace(wires[1])
-        # Note: wont work, need both steps.
-        intersections = set(trace0) & set(trace1)
-        sorted_intersections = sorted(intersections, key=lambda x: x.steps)
-        closest = sorted_intersections[1] # avoid 0, 0
+        intersections = find_intersections(trace0, trace1)
+        closest = intersections[1] # avoid 0, 0
         print("Closest: %s, %s" % closest.pos)
+        print("Steps: %s" % closest.steps)
         print("Distance: %s" % manhattan(closest))
 
 if __name__ == '__main__':
